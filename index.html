@@ -1,0 +1,1298 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style><title>急急如律令</title>
+<meta name="description" content="信眾有求，你來畫符。一炷香 40 秒，能救幾個算幾個。">
+<meta name="theme-color" content="#6e1a12">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="急急如律令">
+<meta property="og:description" content="信眾有求，你來畫符。一炷香 40 秒，能救幾個算幾個。">
+<meta property="og:image" content="og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="急急如律令">
+<meta name="twitter:description" content="信眾有求，你來畫符。一炷香 40 秒，能救幾個算幾個。">
+<meta name="twitter:image" content="og-image.png">
+</head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cactus+Classical+Serif&family=LXGW+WenKai+TC:wght@400;700&display=swap">
+<style>
+/* 版面概念：一座深夜的宮廟。上半是排隊的紙紮信眾，下半是供桌，桌上一張黃符紙、一爐當計時器的香。 */
+:root {
+  color-scheme: dark;
+  --wall: #6e1a12;
+  --wall-deep: #3f0f0b;
+  --desk: #38190e;
+  --desk-edge: #5b2c16;
+  --gold: #e0b24a;
+  --gold-soft: #f3d98f;
+  --talisman: #f0c93e;
+  --cinnabar: #b81f12;
+  --cream: #fff6dc;
+  --ink: #2d1610;
+  --ember: #ff7a2e;
+  --display: "Cactus Classical Serif", "BiauKai", "Kaiti TC", "DFKai-SB", serif;
+  --body: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "DFKai-SB", serif;
+}
+html, body { height: 100%; }
+body {
+  background: var(--wall-deep);
+  color: var(--cream);
+  font-family: var(--body);
+  overflow: hidden;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+}
+.game {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 480px;
+  margin-inline: auto;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  background: var(--desk);
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--gold-soft); outline-offset: 2px; }
+
+/* 廟內場景 */
+.stage {
+  position: relative;
+  flex: 0 0 clamp(190px, 36%, 320px);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255, 170, 70, .3), transparent 26%),
+    radial-gradient(circle at 88% 12%, rgba(255, 170, 70, .3), transparent 26%),
+    linear-gradient(180deg, var(--wall), var(--wall-deep));
+}
+.plaque {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 12px 4px;
+  font-family: var(--display);
+  font-size: clamp(15px, 4.6vw, 20px);
+  letter-spacing: .14em;
+  white-space: nowrap;
+  color: var(--gold);
+  background: #1f0d08;
+  border: 2px solid var(--gold);
+  outline: 1px solid #1f0d08;
+}
+.hud { position: absolute; top: 6px; z-index: 8; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.hud b { font-family: var(--display); font-weight: 400; font-size: 30px; }
+.hud span { font-size: 13px; margin-left: 2px; }
+.hud small { display: block; font-size: 12px; color: var(--gold-soft); }
+.hud-time { left: 10px; }
+.hud-score { right: 10px; text-align: right; }
+.urgent .hud-time { color: #ffb37d; animation: pulse .5s ease-in-out infinite alternate; }
+@keyframes pulse { to { transform: scale(1.12); } }
+
+/* 排隊的紙紮人 */
+.queue { position: absolute; inset: 0; }
+.person {
+  position: absolute;
+  bottom: 0;
+  transform-origin: 50% 100%;
+  transition: right .25s ease-out, height .25s ease-out, filter .25s, opacity .25s, transform .26s ease-in;
+}
+.person[data-slot="0"] { right: 0; height: 80%; z-index: 5; }
+.person[data-slot="1"] { right: 33%; height: 66%; z-index: 4; filter: brightness(.74); }
+.person[data-slot="2"] { right: 50%; height: 58%; z-index: 3; filter: brightness(.62); }
+.person[data-slot="3"] { right: 63%; height: 52%; z-index: 2; filter: brightness(.52); }
+.person[data-slot="4"] { right: 74%; height: 46%; z-index: 1; filter: brightness(.44); }
+.person.leaving { transform: translateX(60%) rotate(9deg); opacity: 0; z-index: 6; }
+
+/* 對話框 */
+.bubble {
+  position: absolute;
+  z-index: 7;
+  left: 8px;
+  top: 46px;
+  width: 56%;
+  padding: 7px 10px 8px;
+  background: var(--cream);
+  color: var(--ink);
+  border-radius: 4px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .35);
+  font-size: clamp(14px, 3.9vw, 16px);
+  line-height: 1.32;
+}
+.bubble::after {
+  content: "";
+  position: absolute;
+  right: -9px;
+  top: 22px;
+  border-left: 10px solid var(--cream);
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+}
+.bubble p { margin: 0; }
+.who { font-size: 12px; color: #7d4a2c; }
+.rule { margin-top: 4px !important; padding: 2px 6px; background: var(--cinnabar); color: var(--cream); font-size: 13px; line-height: 1.25; font-weight: 700; }
+.say {
+  position: absolute;
+  z-index: 9;
+  right: 8px;
+  bottom: 12px;
+  max-width: 70%;
+  padding: 4px 9px;
+  background: var(--gold-soft);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .35);
+}
+.say.show { animation: rise 1.25s ease-out; }
+.say.bad { background: #f6c0ad; }
+@keyframes rise {
+  0% { opacity: 0; transform: translateY(10px); }
+  12%, 75% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-14px); }
+}
+
+/* 供桌 */
+.altar {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 5px solid var(--desk-edge);
+  background: repeating-linear-gradient(92deg, #3e1c10 0 3px, #38190e 3px 11px, #341609 11px 17px);
+}
+.desk { flex: 1 1 0; min-height: 0; display: flex; gap: 6px; padding: 10px 6px 4px; }
+.burner, .inkstone { position: relative; flex: 0 0 44px; }
+.sheet-slot { flex: 1 1 0; min-width: 0; container-type: size; display: flex; align-items: center; justify-content: center; }
+.sheet {
+  position: relative;
+  width: min(100cqw, 75cqh);
+  aspect-ratio: 3 / 4;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, .5);
+  touch-action: none;
+  transition: transform .15s ease-out, opacity .15s;
+  will-change: transform;
+}
+.sheet canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#ink { touch-action: none; cursor: crosshair; }
+.stamp { width: 26% !important; height: auto !important; inset: auto 6% 5% auto !important; aspect-ratio: 1; opacity: 0; pointer-events: none; }
+.sheet.sending { transition: transform .28s cubic-bezier(.3, .7, .3, 1), opacity .28s .1s; opacity: .85; }
+.sheet.sending .stamp { opacity: 1; animation: stampIn .13s ease-out; }
+.sheet.arriving { animation: arrive .2s ease-out; }
+.sheet.shake { animation: shake .3s linear; }
+@keyframes stampIn { from { transform: scale(2.2) rotate(-6deg); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes arrive { from { transform: translateY(26%) rotate(1.5deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes shake { 20% { transform: translateX(-8px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(3px); } }
+
+/* 香爐：就是計時器 */
+.stick {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  width: 4px;
+  margin-left: -2px;
+  height: calc((100% - 38px) * var(--burn, 1));
+  background: #a5602f;
+}
+.stick::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -1px;
+  width: 6px;
+  height: 7px;
+  border-radius: 3px;
+  background: var(--ember);
+  box-shadow: 0 0 9px 3px rgba(255, 122, 46, .75);
+}
+.urgent .stick::before { box-shadow: 0 0 16px 7px rgba(255, 122, 46, .95); }
+.pot {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  bottom: 2px;
+  height: 32px;
+  background: linear-gradient(90deg, #7a5a1f, var(--gold) 45%, #6c4d18);
+  border-radius: 3px 3px 15px 15px;
+}
+.pot::before { content: ""; position: absolute; left: -3px; right: -3px; top: -3px; height: 7px; border-radius: 3px; background: var(--gold-soft); }
+.burn-label { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-family: var(--display); font-size: 13px; color: #3a2708; }
+.inkstone svg { position: absolute; left: 0; bottom: 2px; width: 44px; height: auto; }
+
+/* 開壇控制列與交符把手 */
+.controls { flex: 0 0 auto; display: flex; flex-direction: column; gap: 5px; padding: 3px 8px 8px; }
+.ctl-row { display: flex; gap: 6px; align-items: stretch; }
+.btn {
+  min-height: 46px;
+  padding: 4px 8px;
+  border: 1px solid var(--gold);
+  background: #1f0d08;
+  color: var(--gold-soft);
+  font-size: 14px;
+  line-height: 1.15;
+  border-radius: 3px;
+}
+.btn.primary { flex: 1 1 auto; background: var(--gold); color: #2a1404; border-color: var(--gold-soft); font-family: var(--display); font-size: 21px; letter-spacing: .2em; }
+.btn:hover { filter: brightness(1.12); }
+.btn:disabled { opacity: .5; cursor: default; filter: none; }
+.note { margin: 0; text-align: center; font-size: 12px; color: var(--gold-soft); }
+.handle {
+  flex: 0 0 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border: 0;
+  background: transparent;
+  color: var(--gold-soft);
+  font-size: 14px;
+  touch-action: none;
+  opacity: .35;
+  cursor: grab;
+  transition: opacity .15s;
+}
+.handle.ready { opacity: 1; }
+.handle svg { width: 26px; height: 16px; }
+.handle.ready svg { animation: nudge .9s ease-in-out infinite; }
+@keyframes nudge { 50% { transform: translateY(-4px); } }
+.game[data-state="idle"] .handle { display: none; }
+.game:not([data-state="idle"]) .controls { display: none; }
+.game[data-state="idle"] #ink { cursor: default; pointer-events: none; }
+
+/* 結算 */
+.game[data-state="result"] .stage, .game[data-state="result"] .altar { display: none; }
+.result { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; background: var(--wall-deep); user-select: text; -webkit-user-select: text; }
+.result-scroll { flex: 1 1 0; min-height: 0; overflow-y: auto; touch-action: pan-y; }
+.result-scroll img, .result-scroll canvas { display: block; width: 100%; height: auto; }
+.result-actions { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0 10px; }
+.result-actions .btn { flex: 1 1 88px; }
+.status { flex: 1 0 100%; margin: 0; min-height: 1.2em; text-align: center; font-size: 13px; color: var(--gold-soft); user-select: text; -webkit-user-select: text; }
+
+@media (prefers-reduced-motion: reduce) {
+  .person, .sheet, .say.show, .handle.ready svg, .urgent .hud-time, .sheet.sending .stamp, .sheet.arriving, .sheet.shake { transition: none; animation-duration: .01s; }
+  .handle.ready svg, .urgent .hud-time { animation: none; }
+}
+</style>
+
+<main class="game" id="game" data-state="idle">
+  <section class="stage" id="stage" aria-label="排隊求符的信眾">
+    <div class="plaque">有求必應</div>
+    <div class="hud hud-time" aria-label="剩餘秒數"><b id="time">40</b><span>秒</span></div>
+    <div class="hud hud-score"><b id="count">0</b><span>張</span><small id="money">NT$0</small></div>
+    <div class="queue" id="queue"></div>
+    <div class="bubble" id="bubble" aria-live="polite">
+      <p class="who" id="who"></p>
+      <p id="ask"></p>
+      <p class="rule" id="rule" hidden></p>
+    </div>
+    <div class="say" id="say" aria-live="polite"></div>
+  </section>
+
+  <section class="altar" id="altar" aria-label="供桌">
+    <div class="desk">
+      <div class="burner" id="burner" aria-hidden="true">
+        <div class="stick"></div>
+        <div class="pot"><div class="burn-label">香</div></div>
+      </div>
+      <div class="sheet-slot">
+        <div class="sheet" id="sheet">
+          <canvas id="base" width="600" height="800"></canvas>
+          <canvas id="ink" width="600" height="800" aria-label="符紙，在這裡畫符"></canvas>
+          <canvas id="stamp" class="stamp" width="200" height="200"></canvas>
+        </div>
+      </div>
+      <div class="inkstone" aria-hidden="true">
+        <svg viewBox="0 0 44 150" fill="none">
+          <rect x="30" y="8" width="5" height="96" rx="2" fill="#8a5a2c"/>
+          <path d="M27 104h11l-2 24q-3.500 6-7 0z" fill="#241006"/>
+          <path d="M29.500 122h6q-.5 9-3 11q-2.500-2-3-11z" fill="#b81f12"/>
+          <ellipse cx="20" cy="136" rx="19" ry="12" fill="#1a0b06"/>
+          <ellipse cx="20" cy="134" rx="14" ry="8" fill="#b81f12"/>
+          <ellipse cx="15" cy="132" rx="4" ry="2" fill="#e0564a"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="ctl-row">
+        <button class="btn primary" id="start" type="button">開壇</button>
+        <button class="btn" id="sound" type="button" aria-pressed="true">聲音<br><span id="sound-label">開</span></button>
+      </div>
+      <p class="note" id="best-note">本壇符咒僅供娛樂，考試還是要讀書。</p>
+    </div>
+
+    <button class="handle" id="handle" type="button" disabled aria-label="把符交給信眾">
+      <svg viewBox="0 0 26 16" fill="none" stroke="currentColor" stroke-width="2.500" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8l9-6 9 6"/><path d="M4 15l9-6 9 6"/></svg>
+      <span>往上滑，交符</span>
+    </button>
+  </section>
+
+  <section class="result" id="result" hidden aria-label="今日符咒一覽">
+    <div class="result-scroll" id="result-scroll"></div>
+    <div class="result-actions">
+      <button class="btn primary" id="again" type="button" disabled>再開一壇</button>
+      <button class="btn" id="save" type="button" disabled hidden>存成圖片</button>
+      <button class="btn" id="copy" type="button" disabled>複製戰績</button>
+      <p class="status" id="save-hint">長按圖片可以存下來（電腦按右鍵）</p>
+      <p class="status" id="status" aria-live="polite"></p>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const game = $('game'), sheet = $('sheet'), handle = $('handle');
+  const baseCv = $('base'), inkCv = $('ink'), ctx = inkCv.getContext('2d');
+  const DISPLAY = '"Cactus Classical Serif","BiauKai","Kaiti TC","DFKai-SB",serif';
+  const BODY = '"LXGW WenKai TC","Kaiti TC","BiauKai","DFKai-SB",serif';
+  const CINNABAR = '#b81f12', PAPER = '#f0c93e';
+  const SW = 600, SH = 800;              // 符紙座標
+  const MIN_INK = 100;                   // 低於這個筆畫長度，信眾會退回
+  const MAX_FANS = 20;                  // 每局從信眾名單隨機抽的人數
+  const DURATION = 40;                   // 一炷香的秒數
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- 信眾 ---------- */
+  const SKIN = ['#f3cfa8', '#e8bb8e', '#d9a679', '#f6d9b8'];
+  const CUSTOMERS = [
+    {name:'林阿嬤', ask:'我孫子要考試，保佑他考上第一志願。', wish:'孫子上榜', thanks:'乖喔，拿去給孫子！', fee:200, look:{skin:0,hair:'perm',hc:'#d8d4cc',top:'floral',tc:'#7a3f8f'}},
+    {name:'陳經理', ask:'老闆今年可以離職嗎？', wish:'求老闆離職', thanks:'明天就放他辦公室。', fee:600, look:{skin:1,hair:'short',hc:'#2a221e',top:'suit',tc:'#2c3345',tie:'#a82a2a',glasses:1}},
+    {name:'工程師小吳', ask:'禮拜五下午要上線，求不要出事。', wish:'上線不出事', thanks:'這張要貼機房。', fee:800, look:{skin:3,hair:'side',hc:'#1f1c1c',top:'hoodie',tc:'#3f4a55',glasses:1}},
+    {name:'外送員阿凱', ask:'一路綠燈就好，我還有三單。', wish:'一路綠燈', thanks:'給你五星好評！', fee:100, look:{skin:2,hair:'helmet',hc:'#d9432f',top:'vest',tc:'#2f9f6b'}},
+    {name:'小芳', ask:'前男友可以不要再傳訊息嗎？', wish:'前任閉嘴', thanks:'今晚終於能睡了。', fee:300, look:{skin:3,hair:'long',hc:'#35241c',top:'shirt',tc:'#e3a0a8'}},
+    {name:'王伯', ask:'這期大樂透，六個號碼就好。', wish:'大樂透六碼', thanks:'中了分你一成！', fee:1200, look:{skin:2,hair:'bald',hc:'#8a8580',top:'shirt',tc:'#6f8f7a'}},
+    {name:'學生小宇', ask:'段考全部用猜的，求都猜對。', wish:'猜題全對', thanks:'下次還來！', fee:100, look:{skin:0,hair:'short',hc:'#17120f',top:'uniform',tc:'#f2f2ea'}},
+    {name:'陳媽媽', ask:'小孩今晚可以自己睡嗎？', wish:'小孩自己睡', thanks:'拜託要有效。', fee:300, look:{skin:1,hair:'bun',hc:'#3a2a20',top:'shirt',tc:'#5c86a8'}},
+    {name:'研究生阿哲', ask:'教授已讀三週了，求他回信。', wish:'教授回信', thanks:'我現在就去寄信。', fee:200, look:{skin:3,hair:'side',hc:'#2d2420',top:'hoodie',tc:'#7b5a3a',glasses:1}},
+    {name:'李老師', ask:'求學生明天都交作業。', wish:'全班交作業', thanks:'沒交的罰抄這張。', fee:500, look:{skin:0,hair:'long',hc:'#4a3226',top:'shirt',tc:'#c9a24a',glasses:1}},
+    {name:'店員小美', ask:'今晚大夜班，求沒有奧客。', wish:'大夜沒奧客', thanks:'謝謝光臨！', fee:200, look:{skin:1,hair:'bun',hc:'#27201c',top:'apron',tc:'#f0efe6'}},
+    {name:'張先生', ask:'我買在山頂，求解套就好。', wish:'股票解套', thanks:'不賺也沒關係了。', fee:1000, look:{skin:2,hair:'short',hc:'#57504a',top:'suit',tc:'#454545',tie:'#2f6d4d'}},
+    {name:'貓奴阿嘉', ask:'我家的貓可以讓我摸一下嗎？', wish:'貓肯給摸', thanks:'回家試試看！', fee:300, look:{skin:3,hair:'cap',hc:'#c9783a',top:'shirt',tc:'#e8e0cc'}},
+    {name:'新手爸阿志', ask:'一次睡滿四小時就好。', wish:'睡滿四小時', thanks:'我先在這裡睡一下。', fee:400, look:{skin:1,hair:'side',hc:'#3a2a20',top:'shirt',tc:'#8a9aa6'}},
+    {name:'業務 Amy', ask:'客戶已讀不回，求他回一個字。', wish:'客戶回訊', thanks:'回「嗯」也可以。', fee:700, look:{skin:0,hair:'long',hc:'#6b4228',top:'suit',tc:'#7b2f3a',tie:'#f2e6d2'}},
+    {name:'蔡哥', ask:'五點準時下班，不要再有公文。', wish:'準時下班', thanks:'這張免簽核吧？', fee:300, look:{skin:2,hair:'short',hc:'#2a2522',top:'shirt',tc:'#dfe6ea',glasses:1}},
+    {name:'阿達', ask:'下週要穿無袖，求胸肌快點來。', wish:'胸肌速成', thanks:'練完再來謝你！', fee:400, look:{skin:2,hair:'short',hc:'#191513',top:'tank',tc:'#f3f1ea'}},
+    {name:'鄭小姐', ask:'樓上半夜別再搬桌子了。', wish:'樓上安靜', thanks:'今晚貼天花板。', fee:300, look:{skin:3,hair:'long',hc:'#1d1714',top:'hoodie',tc:'#a9bcc9'}},
+    {name:'求職者小敏', ask:'面試官不要問我的缺點。', wish:'不問缺點', thanks:'缺點是太相信你。', fee:200, look:{skin:0,hair:'bun',hc:'#2b211b',top:'suit',tc:'#30343c',tie:'#f4f1e8'}},
+    {name:'網紅 Vivi', ask:'求演算法推我一次就好。', wish:'演算法推我', thanks:'記得按讚追蹤！', fee:900, look:{skin:3,hair:'perm',hc:'#c88a4a',top:'shirt',tc:'#e86fa0'}},
+    {name:'騎士阿倫', ask:'紅線停了一下，求不要開單。', wish:'不要開單', thanks:'我去牽車了。', fee:200, look:{skin:1,hair:'cap',hc:'#2f5d8a',top:'shirt',tc:'#5a5a5a'}},
+    {name:'林房東', ask:'求房客每個月準時繳房租。', wish:'準時繳租', thanks:'押金不退喔。', fee:800, look:{skin:2,hair:'perm',hc:'#2a2320',top:'floral',tc:'#2f6a5c'}},
+    {name:'郭阿公', ask:'孫子教我用手機，求我學得會。', wish:'學會手機', thanks:'這要怎麼掃？', fee:100, look:{skin:1,hair:'bald',hc:'#d4d0ca',top:'shirt',tc:'#a68a5c',glasses:1}},
+    {name:'護理師小雯', ask:'今晚值班，求病人都好好睡。', wish:'值班平安', thanks:'我回去顧病人了。', fee:300, look:{skin:0,hair:'bun',hc:'#2b1f1a',top:'labcoat',tc:'#f4f6f2',inner:'#6fb0b8'}},
+    {name:'房仲阿豪', ask:'這間凶宅，求買家不要多問。', wish:'凶宅賣掉', thanks:'我貼在門後面。', fee:1000, look:{skin:1,hair:'side',hc:'#14100e',top:'suit',tc:'#27406b',tie:'#d9a23a'}},
+    {name:'準新娘小潔', ask:'婚禮那天，求婆婆不要致詞。', wish:'婆婆不致詞', thanks:'喜餅分你一盒。', fee:500, look:{skin:3,hair:'veil',hc:'#5a3a26',top:'shirt',tc:'#f7f1ea'}},
+    {name:'何師傅', ask:'評審來的那天，求火候別失手。', wish:'火候穩定', thanks:'下次來送你小菜。', fee:600, look:{skin:2,hair:'chef',hc:'#2a221e',top:'labcoat',tc:'#f3efe4',inner:'#c23b2e',beard:1}},
+    {name:'司機老楊', ask:'末班車，求沒有人睡過站。', wish:'沒人睡過站', thanks:'下車請刷卡。', fee:200, look:{skin:2,hair:'cap',hc:'#2c4a3a',top:'shirt',tc:'#bcd0c4'}},
+    {name:'高中生小柔', ask:'明天告白，求不要發好人卡。', wish:'不發好人卡', thanks:'我現在去傳訊息！', fee:100, look:{skin:0,hair:'pigtail',hc:'#1c1512',top:'uniform',tc:'#f5f3e8'}},
+    {name:'大學生小庭', ask:'搶課系統，這次求不要當機。', wish:'搶到通識課', thanks:'營養學分我來了！', fee:100, look:{skin:3,hair:'pony',hc:'#7a4a2a',top:'stripe',tc:'#f2efe6',stripe:'#3a5a8c'}},
+    {name:'會計美玲', ask:'今天月底，求帳一次就平。', wish:'帳一次就平', thanks:'這張可以報帳嗎？', fee:500, look:{skin:1,hair:'perm',hc:'#4a2f22',top:'shirt',tc:'#8a6fa8',glasses:1}},
+    {name:'設計師小安', ask:'客戶不要再說「感覺不對」。', wish:'客戶說可以', thanks:'這張是最終版了。', fee:600, look:{skin:3,hair:'beanie',hc:'#d9a23a',top:'stripe',tc:'#1f1f1f',stripe:'#e8e6de'}},
+    {name:'PM 小彥', ask:'求需求不要在上線前一天改。', wish:'需求別再改', thanks:'我開個會同步。', fee:700, look:{skin:0,hair:'side',hc:'#5c3a24',top:'hoodie',tc:'#3f7f8c'}},
+    {name:'客服阿萍', ask:'今天求沒有人要找我主管。', wish:'不找主管', thanks:'很高興為您服務。', fee:200, look:{skin:1,hair:'pony',hc:'#241b17',top:'suit',tc:'#3f5f7f',tie:'#e8c94a'}},
+    {name:'阿土伯', ask:'颱風拜託繞過我的芒果園。', wish:'颱風繞道', thanks:'芒果熟了寄給你。', fee:500, look:{skin:2,hair:'straw',hc:'#b23a2a',top:'shirt',tc:'#9a8a6a'}},
+    {name:'船長阿海', ask:'求這次別再網到拖鞋了。', wish:'漁獲滿載', thanks:'回來請你吃魚。', fee:600, look:{skin:2,hair:'beanie',hc:'#2a4a7a',top:'stripe',tc:'#f4f2ea',stripe:'#b8321f',beard:1,bc:'#cfcac0'}},
+    {name:'上班族小琪', ask:'颱風假，求今晚就宣布。', wish:'宣布颱風假', thanks:'我先把鬧鐘關了。', fee:400, look:{skin:3,hair:'long',hc:'#2a1f1a',top:'suit',tc:'#5a5f68',tie:'#e8d5c0',glasses:1}},
+    {name:'粉絲小綠', ask:'演唱會搶票，求一次就進去。', wish:'搶到門票', thanks:'搖滾區見！', fee:500, look:{skin:0,hair:'pigtail',hc:'#3f8f6a',top:'hoodie',tc:'#f0a8c8'}},
+    {name:'玩家阿宅', ask:'抽了兩百抽，求出一隻就好。', wish:'抽卡出貨', thanks:'歐氣借我一下。', fee:400, look:{skin:3,hair:'short',hc:'#1c1a24',top:'hoodie',tc:'#2a2540',glasses:1}},
+    {name:'淑芬姨', ask:'過年親戚別再問我何時結婚。', wish:'親戚閉嘴', thanks:'過年就靠這張。', fee:300, look:{skin:1,hair:'perm',hc:'#7a2f3a',top:'floral',tc:'#c96a3a'}},
+    {name:'許太太', ask:'今晚打四圈，求自摸一次。', wish:'麻將自摸', thanks:'贏了請你吃飯。', fee:500, look:{skin:0,hair:'bun',hc:'#c9c5bd',top:'floral',tc:'#2f4f7a',glasses:1}},
+    {name:'阿寬', ask:'明天拔智齒，求不要痛。', wish:'拔牙不痛', thanks:'這張可以含著嗎？', fee:200, look:{skin:2,hair:'short',hc:'#3a2e28',top:'tank',tc:'#d8a03a'}},
+    {name:'小蘋', ask:'鹹酥雞已經買了，求吃了不胖。', wish:'吃了不胖', thanks:'再加一份甜不辣。', fee:200, look:{skin:3,hair:'pony',hc:'#c0603a',top:'tank',tc:'#e86f6f'}},
+    {name:'周副理', ask:'求頭髮長回來，一半就好。', wish:'頭髮長回來', thanks:'貼頭上不會掉吧？', fee:800, look:{skin:1,hair:'bald',hc:'#2a2522',top:'suit',tc:'#3a3f4a',tie:'#6a3f8f',glasses:1}},
+    {name:'租屋小賴', ask:'退租了，求房東把押金還我。', wish:'押金退回', thanks:'我去找房東了。', fee:300, look:{skin:0,hair:'cap',hc:'#8a3a6a',top:'stripe',tc:'#e6dfc8',stripe:'#4f7a4a'}},
+    {name:'黃大哥', ask:'繞第五圈了，求一個停車位。', wish:'找到車位', thanks:'我臨停一下就好。', fee:200, look:{skin:2,hair:'side',hc:'#57504a',top:'vest',tc:'#d9832f',beard:1}},
+    {name:'小晴', ask:'我家的狗別再咬拖鞋了。', wish:'狗別咬拖鞋', thanks:'這張不要被牠吃掉。', fee:200, look:{skin:3,hair:'bun',hc:'#9a5a30',top:'shirt',tc:'#7fb06a'}},
+    {name:'Mike', ask:'我想吃麻辣鍋，但不要拉肚子。', wish:'吃辣不拉肚子', thanks:'謝謝師父，很靈！', fee:600, look:{skin:3,hair:'short',hc:'#d9b45a',top:'shirt',tc:'#4f7fb0',beard:1}},
+    {name:'隔壁宮師兄', ask:'我忘記怎麼畫了，借我抄一張。', wish:'同行求符', thanks:'別跟我師父講。', fee:1000, look:{skin:1,hair:'bun',hc:'#15110e',top:'robe',tc:'#3a3f7a'}},
+    {name:'小豆', ask:'明天不想上學，求學校放假。', wish:'學校放假', thanks:'這是我的零用錢。', fee:100, look:{skin:0,hair:'short',hc:'#241a14',top:'uniform',tc:'#ffd54a'}}
+  ];
+  // 同一個願望的第二種說法，每局隨機二選一
+  const ALT_ASK = {
+    '林阿嬤':'孫子考運不好，求幫他補一點。',
+    '陳經理':'求老闆中樂透，明天就不來了。',
+    '工程師小吳':'新版沒寫測試，求上線別爆炸。',
+    '外送員阿凱':'餐快涼了，求紅燈都讓開。',
+    '小芳':'前男友又傳「在嗎」，求他閉嘴。',
+    '王伯':'大樂透上次差一碼，求這次中。',
+    '學生小宇':'明天段考只讀封面，求只考封面。',
+    '陳媽媽':'小孩怕床底下有鬼，求他敢自己睡。',
+    '研究生阿哲':'寄給教授第五封了，求他回一封。',
+    '李老師':'全班的狗都吃過作業了，求別再吃。',
+    '店員小美':'昨天有人來退茶葉蛋，求今晚別來。',
+    '張先生':'這檔股票抱三年了，求讓我下車。',
+    '貓奴阿嘉':'罐頭都我開的，求貓讓我摸一下。',
+    '新手爸阿志':'忘記床長怎樣了，求讓我睡一覺。',
+    '業務 Amy':'報價單一寄客戶就消失，求他現身。',
+    '蔡哥':'下班前一分鐘，求別再叫我了。',
+    '阿達':'健身房只去三次，求肌肉自己長。',
+    '鄭小姐':'樓上半夜打保齡球，求他們收手。',
+    '求職者小敏':'我只準備了優點，求別問缺點。',
+    '網紅 Vivi':'昨天的片只有我媽看，求多推一點。',
+    '騎士阿倫':'才買杯飲料，求警察別開我單。',
+    '林房東':'房租拖了三個月，求房客快繳。',
+    '郭阿公':'我把孫子封鎖了，求學會解開。',
+    '護理師小雯':'今晚滿床，求大家一覺到天亮。',
+    '房仲阿豪':'房子便宜的原因，求買家別問。',
+    '準新娘小潔':'婆婆寫了十頁講稿，求她弄丟。',
+    '何師傅':'評審一進廚房手就抖，求別抖。',
+    '司機老楊':'又有乘客睡到總站，求今晚別再睡。',
+    '高中生小柔':'好人卡三張了，求別再發第四張。',
+    '大學生小庭':'選課網頁又轉圈了，求讓我選上。',
+    '會計美玲':'帳差一塊錢，求讓我找到它。',
+    '設計師小安':'客戶一直改大小，求他說可以。',
+    'PM 小彥':'老闆說「我有個小想法」，求他忘記。',
+    '客服阿萍':'我的主管也想找主管，求放過我們。',
+    '阿土伯':'颱風明天登陸，求它轉彎。',
+    '船長阿海':'上次只帶回一隻雨鞋，求多來點魚。',
+    '上班族小琪':'颱風天還要上班，求市長放假。',
+    '粉絲小綠':'搶票排到第九萬，求讓我進去。',
+    '玩家阿宅':'薪水都拿去抽卡了，求出一隻。',
+    '淑芬姨':'二姑又要介紹牙醫，求她閉嘴。',
+    '許太太':'麻將輸太多，求今晚贏回來。',
+    '阿寬':'牙醫說只是小手術，求真的不痛。',
+    '小蘋':'減肥明天開始，求今晚吃了不胖。',
+    '周副理':'部門合照我負責反光，求長點頭髮。',
+    '租屋小賴':'一根釘子扣五千，求押金還我。',
+    '黃大哥':'油錢快比停車費貴了，求個車位。',
+    '小晴':'狗咬到第四雙拖鞋了，求牠放過。',
+    'Mike':'火鍋我點了大辣，求肚子沒事。',
+    '隔壁宮師兄':'師父下午要考我，求借我看一張。',
+    '小豆':'作業還沒寫，求學校明天放假。'
+  };
+  const RULES = {
+    one:   {label:'一筆到底，不能停', test:m => m.strokes === 1, fail:'不是說一筆到底嗎？'},
+    full:  {label:'要畫滿整張才有誠意', test:m => m.bw >= SW * .7 && m.bh >= SH * .7, fail:'這也太小張了吧。'},
+    many:  {label:'至少畫五筆才夠靈', test:m => m.strokes >= 5, fail:'才幾筆而已？'},
+    small: {label:'畫小小的，要放皮夾', test:m => m.bw <= SW * .35 && m.bh <= SH * .35, fail:'太大了，塞不下。'}
+  };
+
+  const shuffle = list => {
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    return list;
+  };
+  function buildOrder() {
+    const order = shuffle(CUSTOMERS.slice()).slice(0, MAX_FANS).map(c => ({...c, ask:Math.random() < .5 ? c.ask : ALT_ASK[c.name], rule:null}));
+    const keys = Object.keys(RULES);
+    let last = null;
+    let next = 2 + Math.floor(Math.random() * 2);   // 前兩位不出難題，先讓人學會操作
+    while (next < order.length) {
+      const pool = keys.filter(k => k !== last);
+      last = pool[Math.floor(Math.random() * pool.length)];
+      order[next].rule = last;
+      next += 3 + Math.floor(Math.random() * 2);
+    }
+    return order;
+  }
+
+  /* ---------- 紙紮人繪製 ---------- */
+  function circle(c, x, y, r) { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); }
+  function drawBody(c, L, skin) {
+    const body = () => {
+      c.beginPath();
+      c.moveTo(28, 320);
+      c.quadraticCurveTo(34, 192, 92, 174);
+      c.lineTo(148, 174);
+      c.quadraticCurveTo(206, 192, 212, 320);
+      c.closePath();
+    };
+    c.fillStyle = L.top === 'tank' ? skin : L.tc;
+    body(); c.fill();
+    c.fillStyle = skin;
+    c.fillRect(100, 150, 40, 34);
+    switch (L.top) {
+      case 'suit':
+        c.fillStyle = '#f7f4ea';
+        c.beginPath(); c.moveTo(94, 174); c.lineTo(146, 174); c.lineTo(120, 262); c.closePath(); c.fill();
+        c.fillStyle = L.tie;
+        c.beginPath(); c.moveTo(112, 178); c.lineTo(128, 178); c.lineTo(124, 194); c.lineTo(131, 248); c.lineTo(120, 262); c.lineTo(109, 248); c.lineTo(116, 194); c.closePath(); c.fill();
+        break;
+      case 'hoodie':
+        c.strokeStyle = 'rgba(0,0,0,.28)'; c.lineWidth = 15;
+        c.beginPath(); c.arc(120, 170, 40, Math.PI * .08, Math.PI * .92); c.stroke();
+        c.strokeStyle = '#f2ece0'; c.lineWidth = 4;
+        c.beginPath(); c.moveTo(106, 206); c.lineTo(104, 244); c.moveTo(134, 206); c.lineTo(136, 244); c.stroke();
+        break;
+      case 'floral': {
+        const spots = [[66, 232], [114, 214], [168, 228], [88, 280], [142, 276], [190, 288], [50, 296]];
+        for (const [x, y] of spots) {
+          c.fillStyle = '#f7d5dc';
+          for (let i = 0; i < 5; i++) circle(c, x + Math.cos(i * 1.257) * 9, y + Math.sin(i * 1.257) * 9, 6);
+          c.fillStyle = '#f2c84b'; circle(c, x, y, 4.500);
+        }
+        break;
+      }
+      case 'uniform':
+        c.fillStyle = '#d7d6cb';
+        c.beginPath(); c.moveTo(96, 174); c.lineTo(120, 208); c.lineTo(98, 218); c.lineTo(80, 182); c.closePath(); c.fill();
+        c.beginPath(); c.moveTo(144, 174); c.lineTo(120, 208); c.lineTo(142, 218); c.lineTo(160, 182); c.closePath(); c.fill();
+        c.fillStyle = '#2d4f8a';
+        c.fillRect(146, 244, 40, 5); c.fillRect(146, 254, 28, 5);
+        break;
+      case 'vest':
+        c.fillStyle = '#f2f0e8';
+        c.fillRect(44, 244, 152, 15); c.fillRect(44, 276, 152, 15);
+        break;
+      case 'tank':
+        c.fillStyle = L.tc;
+        c.beginPath(); c.moveTo(76, 190); c.quadraticCurveTo(120, 240, 164, 190); c.lineTo(180, 320); c.lineTo(60, 320); c.closePath(); c.fill();
+        break;
+      case 'apron':
+        c.fillStyle = '#2f8f5f';
+        c.fillRect(70, 216, 100, 104);
+        c.fillRect(86, 176, 12, 42); c.fillRect(142, 176, 12, 42);
+        c.fillStyle = '#f4f1e7';
+        c.fillRect(102, 240, 36, 9);
+        break;
+      case 'labcoat':
+        c.fillStyle = L.inner;
+        c.beginPath(); c.moveTo(94, 174); c.lineTo(146, 174); c.lineTo(120, 236); c.closePath(); c.fill();
+        c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 3;
+        c.beginPath(); c.moveTo(120, 236); c.lineTo(120, 320); c.stroke();
+        c.strokeRect(146, 262, 36, 30);
+        break;
+      case 'stripe':
+        c.save();
+        body(); c.clip();
+        c.fillStyle = L.stripe;
+        for (let y = 196; y < 320; y += 28) c.fillRect(0, y, 240, 13);
+        c.restore();
+        break;
+      case 'robe':
+        c.strokeStyle = '#f2e6c8'; c.lineWidth = 11;
+        c.beginPath(); c.moveTo(146, 176); c.lineTo(98, 262); c.moveTo(94, 176); c.lineTo(120, 222); c.stroke();
+        c.fillStyle = '#e0b24a';
+        c.fillRect(44, 276, 152, 12);
+        break;
+      default:
+        c.fillStyle = 'rgba(255,255,255,.75)';
+        c.beginPath(); c.moveTo(96, 174); c.lineTo(120, 204); c.lineTo(100, 216); c.lineTo(82, 182); c.closePath(); c.fill();
+        c.beginPath(); c.moveTo(144, 174); c.lineTo(120, 204); c.lineTo(140, 216); c.lineTo(158, 182); c.closePath(); c.fill();
+    }
+  }
+  function drawFace(c, expr) {
+    c.fillStyle = 'rgba(232,92,92,.32)';
+    circle(c, 84, 130, 11); circle(c, 156, 130, 11);
+    c.strokeStyle = c.fillStyle = '#2a1712';
+    c.lineCap = 'round';
+    c.lineWidth = 4.500;
+    if (expr === 'happy') {
+      c.beginPath(); c.arc(96, 116, 8, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
+      c.beginPath(); c.arc(144, 116, 8, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
+      c.beginPath(); c.moveTo(102, 132); c.quadraticCurveTo(120, 160, 138, 132); c.closePath();
+      c.fillStyle = '#8c241c'; c.fill();
+    } else if (expr === 'sad') {
+      circle(c, 96, 114, 5.500); circle(c, 144, 114, 5.500);
+      c.beginPath(); c.moveTo(84, 98); c.lineTo(104, 104); c.moveTo(156, 98); c.lineTo(136, 104); c.stroke();
+      c.beginPath(); c.moveTo(106, 146); c.quadraticCurveTo(120, 132, 134, 146); c.stroke();
+    } else {
+      circle(c, 96, 114, 5.500); circle(c, 144, 114, 5.500);
+      c.beginPath(); c.moveTo(108, 140); c.quadraticCurveTo(120, 146, 132, 140); c.stroke();
+    }
+  }
+  function drawHair(c, L, phase) {
+    c.fillStyle = L.hc;
+    const fringe = (sideShift = 0) => {
+      c.beginPath();
+      c.arc(120, 106, 66, Math.PI, 0);
+      c.quadraticCurveTo(162 + sideShift, 74, 128 + sideShift, 84);
+      c.quadraticCurveTo(84 + sideShift, 92, 54, 108);
+      c.closePath();
+      c.fill();
+    };
+    if (phase === 'back') {
+      if (L.hair === 'long') { c.beginPath(); c.moveTo(50, 100); c.quadraticCurveTo(38, 180, 58, 214); c.lineTo(182, 214); c.quadraticCurveTo(202, 180, 190, 100); c.closePath(); c.fill(); }
+      if (L.hair === 'bun') circle(c, 120, 34, 26);
+      if (L.hair === 'perm') for (const [x, y] of [[50, 118], [190, 118], [62, 146], [178, 146]]) circle(c, x, y, 22);
+      if (L.hair === 'pigtail') {
+        circle(c, 40, 136, 26); circle(c, 200, 136, 26);
+      }
+      if (L.hair === 'pony') { c.beginPath(); c.ellipse(190, 128, 24, 56, -.18, 0, Math.PI * 2); c.fill(); }
+      if (L.hair === 'veil') {
+        c.beginPath(); c.moveTo(50, 100); c.quadraticCurveTo(38, 170, 58, 200); c.lineTo(182, 200); c.quadraticCurveTo(202, 170, 190, 100); c.closePath(); c.fill();
+        c.fillStyle = 'rgba(255,255,255,.88)';
+        c.beginPath(); c.moveTo(60, 60); c.quadraticCurveTo(14, 180, 22, 300); c.lineTo(218, 300); c.quadraticCurveTo(226, 180, 180, 60); c.closePath(); c.fill();
+      }
+      return;
+    }
+    switch (L.hair) {
+      case 'short': case 'long': case 'bun': case 'pigtail': fringe(); break;
+      case 'side': case 'pony': fringe(-24); break;
+      case 'veil':
+        fringe();
+        c.fillStyle = '#e0b24a';
+        c.fillRect(82, 44, 76, 8);
+        circle(c, 120, 40, 8);
+        break;
+      case 'chef':
+        c.fillStyle = '#f6f4ec';
+        circle(c, 78, 46, 26); circle(c, 120, 32, 32); circle(c, 162, 46, 26);
+        c.fillRect(62, 46, 116, 38);
+        c.fillStyle = 'rgba(0,0,0,.14)';
+        c.fillRect(62, 74, 116, 10);
+        break;
+      case 'straw':
+        c.fillStyle = '#d9b566';
+        c.beginPath(); c.ellipse(120, 82, 92, 18, 0, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(120, 78, 54, Math.PI, 0); c.closePath(); c.fill();
+        c.fillStyle = L.hc;
+        c.fillRect(66, 64, 108, 12);
+        break;
+      case 'beanie':
+        c.beginPath(); c.arc(120, 96, 68, Math.PI, 0); c.closePath(); c.fill();
+        c.fillRect(52, 78, 136, 22);
+        c.fillStyle = 'rgba(0,0,0,.2)';
+        c.fillRect(52, 78, 136, 22);
+        c.fillStyle = '#f2ece0'; circle(c, 120, 26, 14);
+        break;
+      case 'perm':
+        for (let a = 180; a <= 360; a += 26) {
+          const r = a * Math.PI / 180;
+          circle(c, 120 + Math.cos(r) * 58, 96 + Math.sin(r) * 52, 24);
+        }
+        break;
+      case 'bald':
+        circle(c, 58, 104, 11); circle(c, 182, 104, 11);
+        c.fillStyle = 'rgba(255,255,255,.28)';
+        c.beginPath(); c.ellipse(100, 66, 18, 8, -.4, 0, Math.PI * 2); c.fill();
+        break;
+      case 'cap':
+        c.beginPath(); c.arc(120, 96, 66, Math.PI, 0); c.closePath(); c.fill();
+        c.beginPath(); c.ellipse(142, 96, 62, 11, 0, 0, Math.PI * 2); c.fill();
+        c.fillStyle = 'rgba(255,255,255,.85)'; circle(c, 120, 62, 10);
+        break;
+      case 'helmet':
+        c.beginPath(); c.arc(120, 100, 74, Math.PI, 0); c.closePath(); c.fill();
+        c.fillStyle = 'rgba(255,255,255,.9)'; c.fillRect(112, 28, 16, 70);
+        c.fillStyle = '#1f2228'; c.fillRect(46, 92, 148, 9);
+        c.strokeStyle = '#1f2228'; c.lineWidth = 5;
+        c.beginPath(); c.moveTo(60, 104); c.quadraticCurveTo(70, 176, 120, 172); c.quadraticCurveTo(170, 176, 180, 104); c.stroke();
+        break;
+    }
+  }
+  const scratch = document.createElement('canvas'); scratch.width = 240; scratch.height = 320;
+  const tint = document.createElement('canvas'); tint.width = 240; tint.height = 320;
+  function paintPerson(cv, L, expr = 'neutral') {
+    const c = scratch.getContext('2d');
+    c.clearRect(0, 0, 240, 320);
+    const skin = SKIN[L.skin];
+    drawHair(c, L, 'back');
+    drawBody(c, L, skin);
+    c.fillStyle = skin;
+    c.beginPath(); c.arc(120, 112, 62, 0, Math.PI * 2); c.fill();
+    drawFace(c, expr);
+    if (L.beard) {
+      c.fillStyle = L.bc || L.hc;
+      c.beginPath();
+      c.moveTo(58, 122);
+      c.quadraticCurveTo(64, 182, 120, 182);
+      c.quadraticCurveTo(176, 182, 182, 122);
+      c.quadraticCurveTo(170, 152, 140, 152);
+      c.quadraticCurveTo(120, 160, 100, 152);
+      c.quadraticCurveTo(70, 152, 58, 122);
+      c.fill();
+    }
+    drawHair(c, L, 'front');
+    if (L.glasses) {
+      c.strokeStyle = '#1b1411'; c.lineWidth = 4;
+      c.beginPath(); c.arc(96, 114, 15, 0, Math.PI * 2); c.moveTo(159, 114); c.arc(144, 114, 15, 0, Math.PI * 2); c.moveTo(111, 112); c.lineTo(129, 112); c.stroke();
+    }
+    // 剪紙白邊
+    const t = tint.getContext('2d');
+    t.globalCompositeOperation = 'source-over';
+    t.clearRect(0, 0, 240, 320);
+    t.drawImage(scratch, 0, 0);
+    t.globalCompositeOperation = 'source-in';
+    t.fillStyle = '#f7eed6';
+    t.fillRect(0, 0, 240, 320);
+    const out = cv.getContext('2d');
+    out.clearRect(0, 0, 240, 320);
+    for (let i = 0; i < 12; i++) out.drawImage(tint, Math.cos(i * .5236) * 5, Math.sin(i * .5236) * 5);
+    out.drawImage(scratch, 0, 0);
+  }
+  function makePersonCanvas(L, expr) {
+    const cv = document.createElement('canvas');
+    cv.width = 240; cv.height = 320;
+    paintPerson(cv, L, expr);
+    return cv;
+  }
+
+  /* ---------- 符紙與宮印 ---------- */
+  function drawPaperBase(c, w, h) {
+    const g = c.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, '#f4d04a'); g.addColorStop(1, '#ecc030');
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+    let seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    c.strokeStyle = 'rgba(128,84,10,.1)'; c.lineWidth = Math.max(.5, w / 600);
+    for (let i = 0; i < 260; i++) {
+      const x = rnd() * w, y = rnd() * h, a = rnd() * 6.28, l = (6 + rnd() * 18) * w / 600;
+      c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke();
+    }
+    c.strokeStyle = CINNABAR;
+    c.lineWidth = w * .012; c.strokeRect(w * .035, w * .035, w * .93, h - w * .07);
+    c.lineWidth = w * .004; c.strokeRect(w * .055, w * .055, w * .89, h - w * .11);
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = 'rgba(184,31,18,.5)';
+    c.font = `${w * .105}px ${DISPLAY}`;
+    c.fillText('敕', w / 2, h * .1);
+    c.fillText('令', w / 2, h * .1 + w * .125);
+    c.fillStyle = 'rgba(184,31,18,.32)';
+    c.font = `${w * .05}px ${DISPLAY}`;
+    c.fillText('急 急 如 律 令', w * .4, h * .945);
+  }
+  function drawStamp(c, x, y, s, rot = -.08) {
+    c.save();
+    c.translate(x + s / 2, y + s / 2); c.rotate(rot);
+    c.fillStyle = CINNABAR;
+    c.fillRect(-s / 2, -s / 2, s, s);
+    c.strokeStyle = PAPER; c.lineWidth = s * .025;
+    c.strokeRect(-s * .43, -s * .43, s * .86, s * .86);
+    c.fillStyle = PAPER;
+    c.font = `${s * .36}px ${DISPLAY}`;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('有', s * .2, -s * .2); c.fillText('求', s * .2, s * .2);
+    c.fillText('必', -s * .2, -s * .2); c.fillText('應', -s * .2, s * .2);
+    c.restore();
+  }
+  function paintStatics() {
+    drawPaperBase(baseCv.getContext('2d'), SW, SH);
+    const s = $('stamp').getContext('2d');
+    s.clearRect(0, 0, 200, 200);
+    drawStamp(s, 12, 12, 176);
+    if (state === 'idle') paintTitle();
+  }
+  function paintTitle() {
+    ctx.clearRect(0, 0, SW, SH);
+    ctx.fillStyle = CINNABAR;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `92px ${DISPLAY}`;
+    [...'急急如律令'].forEach((ch, i) => ctx.fillText(ch, SW / 2, 262 + i * 92));
+  }
+
+  /* ---------- 聲音 ---------- */
+  let soundOn = true, ac = null, brushGain = null;
+  function ensureAudio() {
+    if (ac) { if (ac.state === 'suspended') ac.resume().catch(() => {}); return; }
+    try {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      const buf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+      const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = .7;
+      brushGain = ac.createGain(); brushGain.gain.value = 0;
+      src.connect(f); f.connect(brushGain); brushGain.connect(ac.destination);
+      src.start();
+    } catch { ac = null; }
+  }
+  function tone(freq, dur, vol, type = 'sine', delay = 0) {
+    if (!soundOn || !ac) return;
+    const t = ac.currentTime + delay;
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(.0005, t + dur);
+    o.connect(g); g.connect(ac.destination);
+    o.start(t); o.stop(t + dur + .02);
+  }
+  const sfx = {
+    bell() { tone(784, 1.6, .16); tone(1568, 1.1, .06); tone(2352, .7, .03); },   // 磬
+    knock() { tone(470, .09, .28); tone(235, .12, .16, 'triangle'); },           // 木魚
+    stamp() { tone(120, .1, .4, 'triangle'); },
+    good() { tone(988, .5, .1); tone(1319, .6, .08, 'sine', .08); },
+    bad() { tone(165, .24, .18, 'sawtooth'); },
+    end() { tone(523, 2.4, .2); tone(1046, 1.6, .07); },
+    brush(level) { if (brushGain && ac) brushGain.gain.setTargetAtTime(soundOn ? level : 0, ac.currentTime, .025); }
+  };
+
+  /* ---------- 遊戲狀態 ---------- */
+  let state = 'idle';
+  const duration = DURATION * 1000;
+  let order = [], count = 0, money = 0, serial = 0, records = [];
+  let deadline = 0, frame = 0, sending = false, lastKnock = 99, round = 0;
+  let gesture = null, ink = 0, strokes = 0, box = null, paperStart = 0;
+  let best = 0;
+  try { best = Math.min(MAX_FANS, Math.max(0, Number(localStorage.getItem('jiji-ruling-best')) || 0)); } catch {}
+  const pending = new Set();
+  const later = (fn, ms) => { const id = setTimeout(() => { pending.delete(id); fn(); }, ms); pending.add(id); };
+  const clearPending = () => { pending.forEach(clearTimeout); pending.clear(); };
+  const fmtMoney = n => 'NT$' + n.toLocaleString('en-US');
+
+  function setState(next) { state = next; game.dataset.state = next; }
+  function setBurn(f) { $('burner').style.setProperty('--burn', String(Math.max(0, Math.min(1, f)))); }
+  function showBest() {
+    $('best-note').textContent = best > 0
+      ? `本壇最高紀錄 ${best} 張。符咒僅供娛樂，考試還是要讀書。`
+      : '本壇符咒僅供娛樂，考試還是要讀書。';
+  }
+  function setBubble(who, ask, rule) {
+    $('who').textContent = who; $('ask').textContent = ask;
+    $('rule').hidden = !rule;
+    if (rule) $('rule').textContent = rule;
+  }
+  function say(text, bad) {
+    const el = $('say');
+    el.textContent = text;
+    el.classList.remove('show', 'bad'); void el.offsetWidth;
+    el.classList.add('show');
+    el.classList.toggle('bad', !!bad);
+  }
+
+  /* 排隊 */
+  function addPerson(slot) {
+    if (serial >= order.length) return;
+    const cust = order[serial++];
+    const el = makePersonCanvas(cust.look);
+    el.className = 'person'; el.dataset.slot = slot; el.setAttribute('aria-hidden', 'true');
+    $('queue').append(el);
+    cust.el = el;
+  }
+  function fillQueue() {
+    $('queue').replaceChildren(); serial = 0;
+    for (let i = 0; i < 5; i++) addPerson(i);
+  }
+  function advanceQueue() {
+    const people = [...$('queue').children].filter(el => !el.classList.contains('leaving'));
+    const first = people.shift();
+    if (first) { first.classList.add('leaving'); later(() => first.remove(), 300); }
+    people.forEach((el, i) => { el.dataset.slot = i; });
+    addPerson(people.length);
+  }
+  function showCurrent() {
+    const cust = order[count];
+    if (!cust) return;
+    setBubble(cust.name, cust.ask, cust.rule ? '指定：' + RULES[cust.rule].label + '｜靈驗香油錢 ×3' : '');
+  }
+
+  /* 開壇 */
+  function clearPaper() {
+    ctx.clearRect(0, 0, SW, SH);
+    ink = 0; strokes = 0; box = null;
+    handle.disabled = true; handle.classList.remove('ready');
+  }
+  function start() {
+    ensureAudio(); sfx.bell();
+    clearPending(); cancelAnimationFrame(frame);
+    round++;
+    order = buildOrder(); count = 0; money = 0; records = []; sending = false; lastKnock = 99;
+    $('count').textContent = '0'; $('money').textContent = fmtMoney(0);
+    $('time').textContent = String(duration / 1000); setBurn(1);
+    game.classList.remove('urgent');
+    $('result').hidden = true;
+    setState('ready');
+    sheet.className = 'sheet arriving'; sheet.style.transform = '';
+    clearPaper(); fillQueue(); showCurrent();
+    $('start').blur();
+  }
+  function tick() {
+    if (state !== 'playing') return;
+    const left = Math.max(0, deadline - performance.now());
+    $('time').textContent = String(Math.ceil(left / 1000));
+    setBurn(left / duration);
+    game.classList.toggle('urgent', left <= 5000);
+    const sec = Math.ceil(left / 1000);
+    if (left <= 5000 && sec !== lastKnock && sec > 0) { lastKnock = sec; sfx.knock(); }
+    if (!left) { finish(); return; }
+    frame = requestAnimationFrame(tick);
+  }
+  const canDraw = () => (state === 'ready' || state === 'playing') && !sending;
+
+  /* 運筆：越快越細，慢下來墨就重 */
+  function point(e) {
+    const r = inkCv.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(SW, (e.clientX - r.left) / r.width * SW)),
+      y: Math.max(0, Math.min(SH, (e.clientY - r.top) / r.height * SH)),
+      t: e.timeStamp
+    };
+  }
+  function grow(p) {
+    if (!box) box = {x0:p.x, x1:p.x, y0:p.y, y1:p.y};
+    box.x0 = Math.min(box.x0, p.x); box.x1 = Math.max(box.x1, p.x);
+    box.y0 = Math.min(box.y0, p.y); box.y1 = Math.max(box.y1, p.y);
+  }
+  function inkDown(e) {
+    if (!canDraw() || gesture || !e.isPrimary || e.button !== 0) return;
+    if (state === 'ready') {
+      setState('playing');
+      deadline = performance.now() + duration;
+      paperStart = performance.now();
+      tick();
+    }
+    e.preventDefault();
+    try { inkCv.setPointerCapture(e.pointerId); } catch {}
+    const p = point(e);
+    gesture = {type:'draw', id:e.pointerId, target:inkCv, last:p, mid:{x:p.x, y:p.y}, w:17};
+    strokes++; grow(p);
+    ctx.fillStyle = CINNABAR;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 8.500, 0, Math.PI * 2); ctx.fill();
+    handle.disabled = false; handle.classList.add('ready');
+    ensureAudio();
+  }
+  function inkMove(e) {
+    if (!gesture || gesture.type !== 'draw' || gesture.id !== e.pointerId) return;
+    if (!canDraw()) return;
+    e.preventDefault();
+    const samples = e.getCoalescedEvents?.() || [];
+    let speed = 0;
+    for (const s of samples.length ? samples : [e]) {
+      const p = point(s), last = gesture.last;
+      const dist = Math.hypot(p.x - last.x, p.y - last.y);
+      if (dist < .5) continue;
+      const dt = Math.max(1, p.t - last.t);
+      speed = dist / dt;
+      const target = Math.max(6, Math.min(18, 19 - speed * 3.2));
+      gesture.w += (target - gesture.w) * .3;
+      const mid = {x:(last.x + p.x) / 2, y:(last.y + p.y) / 2};
+      ctx.strokeStyle = CINNABAR; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.lineWidth = gesture.w;
+      ctx.beginPath(); ctx.moveTo(gesture.mid.x, gesture.mid.y);
+      ctx.quadraticCurveTo(last.x, last.y, mid.x, mid.y);
+      ctx.stroke();
+      ink += dist; grow(p);
+      gesture.mid = mid; gesture.last = p;
+    }
+    sfx.brush(Math.min(.09, speed * .035));
+  }
+  function inkUp(e) {
+    if (!gesture || gesture.id !== e.pointerId || gesture.type !== 'draw') return;
+    inkMove(e);
+    if (canDraw() && gesture) {
+      const {mid, last, w} = gesture;
+      ctx.strokeStyle = CINNABAR; ctx.lineCap = 'round'; ctx.lineWidth = w;
+      ctx.beginPath(); ctx.moveTo(mid.x, mid.y); ctx.lineTo(last.x, last.y); ctx.stroke();
+    }
+    releaseGesture();
+  }
+  function releaseGesture() {
+    sfx.brush(0);
+    if (!gesture) return;
+    const {target, id} = gesture;
+    gesture = null;
+    try { if (target.hasPointerCapture(id)) target.releasePointerCapture(id); } catch {}
+  }
+  inkCv.addEventListener('pointerdown', inkDown);
+  inkCv.addEventListener('pointermove', inkMove);
+  inkCv.addEventListener('pointerup', inkUp);
+  inkCv.addEventListener('pointercancel', releaseGesture);
+
+  /* 交符 */
+  handle.addEventListener('pointerdown', e => {
+    if (state !== 'playing' || sending || gesture || !strokes || !e.isPrimary || e.button !== 0) return;
+    e.preventDefault();
+    try { handle.setPointerCapture(e.pointerId); } catch {}
+    gesture = {type:'send', id:e.pointerId, target:handle, x:e.clientX, y:e.clientY};
+  });
+  handle.addEventListener('pointermove', e => {
+    if (gesture?.type !== 'send' || gesture.id !== e.pointerId) return;
+    e.preventDefault();
+    const dy = Math.max(0, gesture.y - e.clientY), dx = (e.clientX - gesture.x) * .15;
+    const travel = Math.min(180, dy);
+    sheet.style.transform = `translate(${dx}px,${-travel}px) rotate(${dx * .06}deg) scale(${1 - travel / 180 * .45})`;
+  });
+  handle.addEventListener('pointerup', e => {
+    if (gesture?.type !== 'send' || gesture.id !== e.pointerId) return;
+    const dy = gesture.y - e.clientY, dx = Math.abs(gesture.x - e.clientX);
+    releaseGesture();
+    if (dy >= 40 && dy > dx * .65) send();
+    else sheet.style.transform = '';
+  });
+  handle.addEventListener('pointercancel', () => { releaseGesture(); sheet.style.transform = ''; });
+  document.addEventListener('keydown', e => {
+    if (!['Enter', ' ', 'ArrowUp'].includes(e.key) || state !== 'playing') return;
+    e.preventDefault();
+    if (!gesture && !e.repeat) send();
+  });
+
+  function reject() {
+    deadline -= 1000;
+    sfx.bad();
+    say('師父，這還沒畫完吧？（-1 秒）', true);
+    sheet.style.transform = '';
+    sheet.classList.remove('shake'); void sheet.offsetWidth; sheet.classList.add('shake');
+    later(() => sheet.classList.remove('shake'), 320);
+  }
+  function send() {
+    if (state !== 'playing' || sending || !strokes) return;
+    if (performance.now() >= deadline) { finish(); return; }
+    if (ink < MIN_INK) { reject(); return; }
+    const cust = order[count];
+    const metrics = {strokes, bw:box.x1 - box.x0, bh:box.y1 - box.y0};
+    const ruleDef = cust.rule ? RULES[cust.rule] : null;
+    const met = ruleDef ? ruleDef.test(metrics) : null;
+    const gain = met === true ? cust.fee * 3 : met === false ? Math.round(cust.fee / 2) : cust.fee;
+    sending = true;
+    const snapshot = document.createElement('canvas');
+    snapshot.width = SW / 2; snapshot.height = SH / 2;
+    snapshot.getContext('2d').drawImage(inkCv, 0, 0, SW / 2, SH / 2);
+    records.push({cust, ink, strokes, met, gain, snapshot, at:performance.now() - paperStart});
+    paperStart = performance.now();
+    count++; money += gain;
+    $('count').textContent = String(count);
+    $('money').textContent = fmtMoney(money);
+    if (met === true) { deadline += 2000; sfx.good(); }
+    else if (met === false) sfx.bad();
+    else sfx.stamp();
+    sfx.knock();
+    if (cust.el) paintPerson(cust.el, cust.look, met === false ? 'sad' : 'happy');
+    say(met === false ? `${ruleDef.fail} +${fmtMoney(gain)}`
+      : met === true ? `靈驗！+${fmtMoney(gain)}，香多 2 秒`
+      : `${cust.thanks} +${fmtMoney(gain)}`, met === false);
+
+    // 紙飛向排在最前面的人
+    const from = sheet.getBoundingClientRect();
+    const toEl = cust.el?.getBoundingClientRect();
+    const dx = toEl ? toEl.left + toEl.width / 2 - (from.left + from.width / 2) : 0;
+    const dy = toEl ? toEl.top + toEl.height * .55 - (from.top + from.height / 2) : -200;
+    sheet.classList.add('sending');
+    sheet.style.transform = `translate(${dx}px,${dy}px) rotate(-5deg) scale(.26)`;
+    handle.disabled = true; handle.classList.remove('ready');
+    const thisRound = round;
+    if (count >= order.length) {
+      setState('completing');
+      cancelAnimationFrame(frame);
+    }
+    later(() => {
+      if (thisRound !== round) return;
+      advanceQueue();
+      clearPaper();
+      sheet.className = 'sheet arriving'; sheet.style.transform = '';
+      sending = false;
+      if (state === 'completing') later(finish, 520);
+      else if (state === 'playing') showCurrent();
+    }, 300);
+  }
+
+  /* 收壇 */
+  function finish() {
+    if (state !== 'playing' && state !== 'completing') return;
+    const allDone = state === 'completing';
+    setState('over');
+    cancelAnimationFrame(frame); releaseGesture();
+    game.classList.remove('urgent');
+    handle.disabled = true; handle.classList.remove('ready');
+    $('time').textContent = allDone ? $('time').textContent : '0';
+    if (!allDone) setBurn(0);
+    best = Math.max(best, count);
+    try { localStorage.setItem('jiji-ruling-best', String(best)); } catch {}
+    sfx.end();
+    setBubble('廟公', allDone ? '今天的信眾都服務完了，收壇！' : '香燒完了，收壇！', '');
+    later(showResult, 1300);
+  }
+
+  function rankOf(n) {
+    if (n === 0) return '還在找筆的道士';
+    if (n < 5) return '見習小道士';
+    if (n < 10) return '廟口實習生';
+    if (n < 15) return '夜市符王';
+    if (n < MAX_FANS) return '開壇大法師';
+    return '急急如律令本人';
+  }
+  function collapse(recs) {
+    const n = recs.length;
+    if (n === 0) return {index:null, line:'香燒完了，一張符都沒畫。祖師爺沉默了。'};
+    if (n < 4) return {index:null, line:'符太少，祖師爺還看不出你的本性。'};
+    const k = Math.min(3, Math.floor(n / 2));
+    const mean = list => list.reduce((a, r) => a + r.ink, 0) / list.length;
+    const early = mean(recs.slice(0, k)), late = mean(recs.slice(-k));
+    const index = Math.max(0, Math.min(99, Math.round((1 - late / early) * 100)));
+    const breakAt = recs.findIndex((r, i) => i >= k && r.ink < early * .5);
+    let line;
+    if (index < 20) line = '每張都畫得很認真，排在後面的人也看得很認真。';
+    else if (index < 70) line = breakAt >= 0 ? `從第 ${breakAt + 1} 張開始，你的手已經比信仰快了。` : '畫到後面，你開始相信心誠則靈。';
+    else line = '最後幾張已經不是符了，是簽到。';
+    return {index, line};
+  }
+  function wrapLines(c, text, maxW, maxLines) {
+    const lines = [];
+    let cur = '';
+    for (const ch of text) {
+      if (c.measureText(cur + ch).width > maxW && cur) {
+        lines.push(cur); cur = ch;
+        if (lines.length === maxLines) return lines;
+      } else cur += ch;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+  function shareText() {
+    return `我在一炷香內畫了 ${count} 張符，收了 ${fmtMoney(money)} 香油錢。稱號：${rankOf(count)}。\n#急急如律令`;
+  }
+
+  let resultBlob = null;
+  async function showResult() {
+    const myRound = round;
+    setState('result');
+    $('result').hidden = false;
+    $('status').textContent = '';
+    ['again', 'save', 'copy'].forEach(id => { $(id).disabled = true; });
+    resultBlob = null;
+    try { await document.fonts.ready; } catch {}
+
+    const n = records.length;
+    const W = 1200, pad = 36, gap = 24;
+    const cols = n <= 4 ? 2 : n <= 9 ? 3 : 4;
+    const cw = (W - pad * 2 - gap * (cols - 1)) / cols, ch = cw * 4 / 3;
+    const capH = Math.round(cw * .34);
+    const rows = Math.max(0, Math.ceil(n / cols));
+    const headH = 330;
+    const cv = document.createElement('canvas');
+    cv.width = W;
+    cv.height = headH + rows * (ch + capH + gap) + 90;
+    cv.setAttribute('role', 'img');
+    cv.setAttribute('aria-label', `今日符咒一覽，共 ${n} 張，香油錢 ${fmtMoney(money)}`);
+    const c = cv.getContext('2d');
+    const host = $('result-scroll');
+    host.replaceChildren(cv); host.scrollTop = 0;
+
+    c.fillStyle = '#3f0f0b'; c.fillRect(0, 0, W, cv.height);
+    c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    c.fillStyle = '#e0b24a'; c.font = `104px ${DISPLAY}`;
+    c.fillText('急急如律令', W / 2, 120);
+    c.fillStyle = '#fff6dc'; c.font = `700 40px ${BODY}`;
+    c.fillText(`一炷香 ${n} 張符・香油錢 ${fmtMoney(money)}`, W / 2, 182);
+    c.fillStyle = '#f3d98f'; c.font = `700 38px ${BODY}`;
+    c.fillText(`稱號：${rankOf(n)}`, W / 2, 234);
+    const col = collapse(records);
+    c.fillStyle = '#fff6dc'; c.font = `32px ${BODY}`;
+    c.fillText((col.index === null ? '' : `手速崩壞指數 ${col.index}%　`) + col.line, W / 2, 288, W - pad * 2);
+
+    const paper = document.createElement('canvas');
+    paper.width = cw; paper.height = ch;
+    drawPaperBase(paper.getContext('2d'), cw, ch);
+
+    const drawCell = i => {
+      const r = records[i];
+      const x = pad + (i % cols) * (cw + gap);
+      const y = headH + Math.floor(i / cols) * (ch + capH + gap);
+      c.drawImage(paper, x, y);
+      c.drawImage(r.snapshot, x, y, cw, ch);
+      drawStamp(c, x + cw * .7, y + ch * .78, cw * .22);
+      const fs = Math.round(cw * .115), av = capH * .86;
+      const face = makePersonCanvas(r.cust.look, r.met === false ? 'sad' : 'happy');
+      c.save();
+      c.beginPath(); c.arc(x + av / 2, y + ch + capH / 2 + 2, av / 2, 0, Math.PI * 2); c.clip();
+      c.fillStyle = '#6e1a12'; c.fillRect(x, y + ch, av, capH + 4);
+      c.drawImage(face, 30, 28, 180, 180, x, y + ch + capH / 2 + 2 - av / 2, av, av);
+      c.restore();
+      c.fillStyle = r.met === true ? '#f3d98f' : '#fff6dc';
+      c.font = `700 ${fs}px ${BODY}`;
+      c.textAlign = 'left'; c.textBaseline = 'middle';
+      const tx = x + av + cw * .03;
+      const lines = wrapLines(c, r.cust.wish, cw - av - cw * .03, 2);
+      const sub = r.met === true ? '靈驗' : r.met === false ? '不靈' : '';
+      if (sub) lines.push(sub);
+      const lh = fs * 1.2, y0 = y + ch + capH / 2 + 2 - (lines.length - 1) * lh / 2;
+      lines.forEach((l, j) => {
+        if (sub && j === lines.length - 1) { c.fillStyle = r.met ? '#f3d98f' : '#f6c0ad'; c.font = `${fs * .8}px ${BODY}`; }
+        c.fillText(l, tx, y0 + j * lh);
+      });
+      c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    };
+
+    c.fillStyle = '#f3d98f'; c.font = `26px ${BODY}`; c.textAlign = 'center';
+    c.fillText('本壇符咒僅供娛樂，考試還是要讀書。', W / 2, cv.height - 34);
+
+    let next = 0;
+    const done = () => {
+      if (myRound !== round) return;
+      cv.toBlob(blob => {
+        if (myRound !== round || !blob) return;
+        resultBlob = blob;
+        const img = new Image();
+        img.alt = `今日符咒一覽，共 ${n} 張，香油錢 ${fmtMoney(money)}`;
+        img.onload = () => { if (myRound === round) host.replaceChildren(img); };
+        img.src = URL.createObjectURL(blob);
+        ['again', 'save', 'copy'].forEach(id => { $(id).disabled = false; });
+        $('again').focus({preventScroll:true});
+      }, 'image/png');
+    };
+    const reveal = () => {
+      if (myRound !== round) return;
+      if (next < n) {
+        drawCell(next++);
+        if (next % 2) sfx.stamp();
+        if (reduceMotion) reveal(); else later(reveal, 90);
+      } else done();
+    };
+    reveal();
+  }
+
+  /* 按鈕 */
+  $('start').addEventListener('click', start);
+  $('again').addEventListener('click', start);
+  $('sound').addEventListener('click', () => {
+    soundOn = !soundOn;
+    $('sound').setAttribute('aria-pressed', String(soundOn));
+    $('sound-label').textContent = soundOn ? '開' : '關';
+    ensureAudio();
+    if (soundOn) sfx.knock(); else sfx.brush(0);
+  });
+  $('copy').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(shareText());
+      $('status').textContent = '戰績已複製。';
+    } catch {
+      $('status').textContent = shareText();
+    }
+  });
+  let downloads = null;
+  (async () => {
+    try { downloads = window.claude?.use ? await window.claude.use('downloads') : null; } catch { downloads = null; }
+    if (downloads) { $('save').hidden = false; $('save-hint').hidden = true; }
+  })();
+  $('save').addEventListener('click', async () => {
+    if (!downloads || !resultBlob) return;
+    try {
+      await downloads.save({filename:`急急如律令-${count}張.png`, data:resultBlob});
+      $('status').textContent = '圖片已存好。';
+    } catch (err) {
+      if (err?.code === 'declined') return;
+      $('status').textContent = err?.code === 'rate_limited' ? '存檔視窗已經開著，請先處理它。' : '這裡無法存圖，可以長按或右鍵存圖片。';
+    }
+  });
+
+  /* 防止手機瀏覽器把畫符當成捲動或縮放 */
+  for (const type of ['gesturestart', 'gesturechange', 'gestureend']) {
+    document.addEventListener(type, e => { if (e.cancelable) e.preventDefault(); }, {passive:false});
+  }
+  game.addEventListener('touchmove', e => {
+    if (state !== 'result' && e.cancelable) e.preventDefault();
+  }, {passive:false});
+  game.addEventListener('contextmenu', e => { if (state !== 'result') e.preventDefault(); });
+
+  /* 開場畫面 */
+  order = buildOrder();
+  fillQueue();
+  paintStatics();
+  setBurn(1);
+  showBest();
+  setBubble('廟公', '師父，香快點好了，大家都在等你畫符。', '看願望 → 在黃紙上畫符 → 往上滑交符');
+  if (document.fonts?.ready) document.fonts.ready.then(paintStatics);
+  if (document.fonts?.load) {
+    Promise.all([
+      document.fonts.load(`92px "Cactus Classical Serif"`, '急如律令敕有求必應'),
+      document.fonts.load(`700 32px "LXGW WenKai TC"`, '急如律令稱號香油錢')
+    ]).then(paintStatics).catch(() => {});
+  }
+})();
+</script>
+</body></html>
